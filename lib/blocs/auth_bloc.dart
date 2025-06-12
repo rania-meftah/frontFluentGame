@@ -18,7 +18,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             key: 'auth_token',
             value: result['data']['token'],
           );
-          emit(AuthSuccess(result['data']['role'] ?? 'user'));
+          emit(AuthSuccess(result['data']['user']['role'] ?? 'user'));
         } else {
           emit(AuthFailure(result['message']));
         }
