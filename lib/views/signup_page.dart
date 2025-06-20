@@ -1,162 +1,165 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../blocs/signup/signup_bloc.dart';
+import '../blocs/signup/signup_event.dart';
+import '../blocs/signup/signup_state.dart';
 
-class SignupPage extends StatefulWidget {
-  const SignupPage({Key? key}) : super(key: key);
+class SignupPage extends StatelessWidget {
+  SignupPage({super.key});
 
-  @override
-  State<SignupPage> createState() => _SignupPageState();
-}
+  final _fullNameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-class _SignupPageState extends State<SignupPage> {
-  final TextEditingController _fullNameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  void _signup() {
-    final fullName = _fullNameController.text;
-    final phone = _phoneController.text;
-    final email = _emailController.text;
-    final password = _passwordController.text;
-    print(
-      'Full Name: $fullName, Phone: $phone, Email: $email, Password: $password',
+  void _submitSignup(BuildContext context) {
+    context.read<SignupBloc>().add(
+      SubmitSignup(
+        _fullNameController.text,
+        _phoneController.text,
+        _emailController.text,
+        _passwordController.text,
+      ),
     );
-  }
-
-  void _goToLogin() {
-    Navigator.pushNamed(context, '/login');
-  }
-
-  void _signupWithGoogle() {
-    print("Signup with Google clicked");
-  }
-
-  void _signupWithTel() {
-    print("Signup with Phone clicked");
   }
 
   @override
   Widget build(BuildContext context) {
+    final isLargeScreen = MediaQuery.of(context).size.width > 600;
+
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 30),
-              Image.asset('assets/images/love.png', width: 150, height: 150),
-              const SizedBox(height: 20),
-
-              const SizedBox(height: 30),
-              TextField(
-                controller: _fullNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
-                  hintText: 'Enter your full name',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Center(
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: isLargeScreen ? 600 : double.infinity,
                 ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Phone',
-                  hintText: 'Enter your phone',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.phone),
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  hintText: 'Enter your email address',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  hintText: 'Enter password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
-                ),
-              ),
-              const SizedBox(height: 25),
-
-              // 🟠 Create Account button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _signup,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFF09935),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                child: Column(
+                  children: [
+                    Image.asset('assets/images/love.png', height: 150),
+                    const SizedBox(height: 20),
+                    _buildInputField(
+                      'Full Name',
+                      _fullNameController,
+                      Icons.person,
                     ),
-                  ),
-                  child: const Text(
-                    'Create Account',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(height: 15),
+                    _buildInputField(
+                      'Phone',
+                      _phoneController,
+                      Icons.phone,
+                      type: TextInputType.phone,
                     ),
-                  ),
+                    const SizedBox(height: 15),
+                    _buildInputField(
+                      'Email',
+                      _emailController,
+                      Icons.email,
+                      type: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 15),
+                    _buildInputField(
+                      'Password',
+                      _passwordController,
+                      Icons.lock,
+                      isPassword: true,
+                    ),
+                    const SizedBox(height: 25),
+                    BlocConsumer<SignupBloc, SignupState>(
+                      listener: (context, state) {
+                        if (state is SignupSuccess) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Signup successful!')),
+                          );
+                          // Redirection vers la page login
+                          Navigator.pushReplacementNamed(context, '/login');
+                        } else if (state is SignupFailure) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(state.error)));
+                        }
+                      },
+                      builder: (context, state) {
+                        return ElevatedButton(
+                          onPressed:
+                              state is SignupLoading
+                                  ? null
+                                  : () => _submitSignup(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            minimumSize: const Size(double.infinity, 50),
+                          ),
+                          child:
+                              state is SignupLoading
+                                  ? const CircularProgressIndicator(
+                                    color: Color.fromARGB(255, 255, 255, 255),
+                                  )
+                                  : const Text("Create Account"),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('or continue with'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          onPressed: () => print("Signup with Google"),
+                          icon: const Icon(
+                            Icons.g_mobiledata,
+                            size: 40,
+                                      color: Color.fromARGB(255, 204, 125, 165),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        IconButton(
+                          onPressed: () => print("Signup with Phone"),
+                          icon: const Icon(
+                            Icons.phone_android,
+                            size: 20,
+                                      color: Color.fromARGB(255, 204, 125, 165),
+                          ),
+                        ),
+                      ],
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pushNamed(context, '/login'),
+                      child: const Text(
+                        "Already have an account? Login",
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-
-              const SizedBox(height: 15),
-              const Text('or continue with'),
-              const SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: _signupWithGoogle,
-                    icon: Icon(
-                      Icons.g_mobiledata,
-                      size: 40,
-                      color: Colors.redAccent,
-                    ),
-                    tooltip: 'Sign up with Google',
-                  ),
-                  const SizedBox(width: 30),
-                  IconButton(
-                    onPressed: _signupWithTel,
-                    icon: Icon(
-                      Icons.phone_android,
-                      size: 40,
-                      color: Colors.green,
-                    ),
-                    tooltip: 'Sign up with Phone',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 30),
-              TextButton(
-                onPressed: _goToLogin,
-                child: const Text(
-                  'Already have an account? Login',
-                  style: TextStyle(
-                    color: Colors.deepPurple,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInputField(
+    String label,
+    TextEditingController controller,
+    IconData icon, {
+    TextInputType type = TextInputType.text,
+    bool isPassword = false,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: isPassword,
+      keyboardType: type,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        prefixIcon: Icon(icon),
       ),
     );
   }

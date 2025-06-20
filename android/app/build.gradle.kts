@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.my_flutter_app"
-        minSdk = flutter.minSdkVersion
+        minSdk = 24
         targetSdk = 35                              // ✅ Cible compatible avec les plugins
         versionCode = flutter.versionCode
         versionName = flutter.versionName

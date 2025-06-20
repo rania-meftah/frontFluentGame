@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:my_flutter_app/blocs/language/language_bloc.dart';
+import 'package:my_flutter_app/services/language_service.dart';
+import 'package:my_flutter_app/views/select_language_page.dart';
 
 class AvatarSelectionPage extends StatefulWidget {
   const AvatarSelectionPage({Key? key}) : super(key: key);
@@ -34,7 +38,7 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
       return;
     }
 
-    final url = Uri.parse('http://127.0.0.1:5000/user/avatar');
+    final url = Uri.parse('http://192.168.1.12:5000/user/avatar');
 
     final response = await http.put(
       url,
@@ -54,95 +58,121 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-
-    // Calcul dynamique de la taille des avatars
-    final int crossAxisCount =
-        3; // tu peux changer à 4 ou 5 pour écran plus large
-    final double paddingHorizontal = 16 * 2; // padding total horizontal
-    final double spacing =
-        10 * (crossAxisCount - 1); // total espace entre items
-
-    final double avatarSize =
-        (screenWidth - paddingHorizontal - spacing) / crossAxisCount;
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Choose Your Avatar'),
-        backgroundColor: const Color(0xFFF09935),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const Text(
-              'Choose your avatar',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: GridView.builder(
-                itemCount: avatarPaths.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 1, // carré
-                ),
-                itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedAvatarIndex = index;
-                      });
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color:
-                              selectedAvatarIndex == index
-                                  ? const Color(0xFFF09935)
-                                  : Colors.transparent,
-                          width: 3,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
-                          avatarPaths[index],
-                          width: avatarSize,
-                          height: avatarSize,
-                          fit: BoxFit.cover,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Choose your avatar',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF09935),
+                      const SizedBox(height: 20),
+
+                      /// Partie scrollable avec Grid
+                      Expanded(
+                        child: GridView.builder(
+                          itemCount: avatarPaths.length,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                                childAspectRatio: 1,
+                              ),
+                          itemBuilder: (context, index) {
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  selectedAvatarIndex = index;
+                                });
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color:
+                                        selectedAvatarIndex == index
+                                            ? const Color(0xFFF09935)
+                                            : Colors.transparent,
+                                    width: 3,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.asset(
+                                    avatarPaths[index],
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      /// Bouton en bas
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFF09935),
+                          ),
+                          onPressed: () async {
+                            if (selectedAvatarIndex != null) {
+                              final selectedAvatar =
+                                  avatarPaths[selectedAvatarIndex!];
+                              await updateAvatar(selectedAvatar);
+
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => BlocProvider(
+                                        create:
+                                            (_) => LanguageBloc(
+                                              service: LanguageService(),
+                                            ),
+                                        child: const SelectLanguagePage(),
+                                      ),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Veuillez sélectionner un avatar.",
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          child: const Text(
+                            'Continue',
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
                 ),
-                onPressed: () async {
-                  if (selectedAvatarIndex != null) {
-                    final selectedAvatar = avatarPaths[selectedAvatarIndex!];
-                    await updateAvatar(selectedAvatar);
-                    Navigator.pop(context, selectedAvatar);
-                  }
-                },
-                child: const Text(
-                  'Continue',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
