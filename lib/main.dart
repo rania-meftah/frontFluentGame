@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'views/AddChildPage.dart';
+import 'views/ChooseProfilePage.dart';
+
 import 'views/splash_page.dart';
 import 'views/login_page.dart';
 import 'views/signup_page.dart';
@@ -17,8 +20,11 @@ import 'blocs/forget_password/forget_password_bloc.dart';
 import 'blocs/verification/verification_bloc.dart';
 import 'blocs/newPassword/new_password_bloc.dart';
 import 'blocs/language/language_bloc.dart';
+import 'blocs/children/children_bloc.dart';
+
 import 'services/auth_service.dart';
 import 'services/language_service.dart';
+import 'repositories/children_repository.dart';
 
 void main() {
   runApp(const MyApp());
@@ -47,7 +53,10 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<LanguageBloc>(
           create: (context) => LanguageBloc(service: languageService),
-        ), // ✅ Ajout du bloc language
+        ),
+        BlocProvider<ChildrenBloc>(
+          create: (context) => ChildrenBloc(ChildrenRepository()),
+        ),
       ],
       child: MaterialApp(
         title: 'FLUBINGO',
@@ -61,19 +70,39 @@ class MyApp extends StatelessWidget {
           '/login': (context) => LoginPage(),
           '/signup': (context) => SignupPage(),
           '/admin': (context) => const AdminPage(),
-          '/home': (context) => const UserHomePage(),
+          '/home': (context) => const UserHomePage(childId: '', parentId: ''),
           '/forget': (context) => ForgetPasswordPage(),
           '/verification': (context) => VerificationPage(),
           '/select-language':
-              (context) => const SelectLanguagePage(), // ✅ Route ajoutée
+              (context) => const SelectLanguagePage(childId: ''),
         },
         onGenerateRoute: (settings) {
           if (settings.name == '/new_password') {
             final args = settings.arguments as Map<String, dynamic>;
-            final email = args['email'] as String;
-            final code = args['code'] as String;
             return MaterialPageRoute(
-              builder: (context) => NewPasswordPage(email: email, code: code),
+              builder:
+                  (context) =>
+                      NewPasswordPage(email: args['email'], code: args['code']),
+            );
+          } else if (settings.name == '/choose-profile') {
+            return MaterialPageRoute(builder: (context) => ChooseProfilePage());
+          } else if (settings.name == '/add-child') {
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder:
+                  (context) => AddChildPage(
+                    parentId: args['parentId'],
+                    token: args['token'],
+                  ),
+            );
+          } else if (settings.name == '/user-home') {
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder:
+                  (context) => UserHomePage(
+                    childId: args['childId'],
+                    parentId: args['parentId'],
+                  ),
             );
           }
           return null;

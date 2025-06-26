@@ -18,7 +18,7 @@ class TestBloc extends Bloc<TestEvent, TestState> {
     try {
       final token = await storage.read(key: 'auth_token') ?? '';
       if (token.isEmpty) throw Exception("Token manquant !");
-      final data = await repository.fetchTestWords(token);
+      final data = await repository.fetchTestWords();
       emit(TestLoaded(data, 0));
     } catch (e) {
       emit(TestError("Erreur de chargement : ${e.toString()}"));

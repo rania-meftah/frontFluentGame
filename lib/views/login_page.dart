@@ -10,12 +10,12 @@ class LoginPage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  void _navigateAfterLogin(BuildContext context, String role) {
-    if (role == 'admin') {
-      Navigator.pushReplacementNamed(context, '/admin');
-    } else {
-      Navigator.pushReplacementNamed(context, '/home');
-    }
+  void _navigateAfterLogin(BuildContext context, String userId, String token) {
+    Navigator.pushReplacementNamed(
+      context,
+      '/choose-profile',
+      arguments: {'parentId': userId, 'token': token},
+    );
   }
 
   @override
@@ -31,7 +31,7 @@ class LoginPage extends StatelessWidget {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(const SnackBar(content: Text('Login successful')));
-            _navigateAfterLogin(context, state.role);
+            _navigateAfterLogin(context, state.userId, state.token);
           }
         },
         builder: (context, state) {
@@ -133,14 +133,7 @@ class LoginPage extends StatelessWidget {
                                     ),
                                     child: const Text(
                                       'Login',
-                                      style: TextStyle(
-                                        color: Color.fromARGB(
-                                          255,
-                                          255,
-                                          255,
-                                          255,
-                                        ),
-                                      ),
+                                      style: TextStyle(color: Colors.white),
                                     ),
                                   ),
                               const SizedBox(height: 20),
@@ -180,7 +173,7 @@ class LoginPage extends StatelessWidget {
                                     () =>
                                         Navigator.pushNamed(context, '/signup'),
                                 child: const Text(
-                                  'Don\'t have an account? Sign up',
+                                  "Don't have an account? Sign up",
                                 ),
                               ),
                               const SizedBox(height: 20),

@@ -11,6 +11,7 @@ class SignupPage extends StatelessWidget {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _pinController = TextEditingController(); // ✅ nouveau champ
 
   void _submitSignup(BuildContext context) {
     context.read<SignupBloc>().add(
@@ -19,6 +20,7 @@ class SignupPage extends StatelessWidget {
         _phoneController.text,
         _emailController.text,
         _passwordController.text,
+        _pinController.text, // ✅ ajout du code PIN à l'envoi
       ),
     );
   }
@@ -67,6 +69,14 @@ class SignupPage extends StatelessWidget {
                       Icons.lock,
                       isPassword: true,
                     ),
+                    const SizedBox(height: 15),
+                    _buildInputField(
+                      'Parent PIN (ex: 1234)',
+                      _pinController,
+                      Icons.pin,
+                      type: TextInputType.number,
+                      isPassword: true,
+                    ),
                     const SizedBox(height: 25),
                     BlocConsumer<SignupBloc, SignupState>(
                       listener: (context, state) {
@@ -74,7 +84,6 @@ class SignupPage extends StatelessWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Signup successful!')),
                           );
-                          // Redirection vers la page login
                           Navigator.pushReplacementNamed(context, '/login');
                         } else if (state is SignupFailure) {
                           ScaffoldMessenger.of(
@@ -95,7 +104,7 @@ class SignupPage extends StatelessWidget {
                           child:
                               state is SignupLoading
                                   ? const CircularProgressIndicator(
-                                    color: Color.fromARGB(255, 255, 255, 255),
+                                    color: Colors.white,
                                   )
                                   : const Text("Create Account"),
                         );
@@ -111,7 +120,7 @@ class SignupPage extends StatelessWidget {
                           icon: const Icon(
                             Icons.g_mobiledata,
                             size: 40,
-                                      color: Color.fromARGB(255, 204, 125, 165),
+                            color: Color.fromARGB(255, 204, 125, 165),
                           ),
                         ),
                         const SizedBox(width: 20),
@@ -120,7 +129,7 @@ class SignupPage extends StatelessWidget {
                           icon: const Icon(
                             Icons.phone_android,
                             size: 20,
-                                      color: Color.fromARGB(255, 204, 125, 165),
+                            color: Color.fromARGB(255, 204, 125, 165),
                           ),
                         ),
                       ],

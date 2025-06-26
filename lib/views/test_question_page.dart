@@ -26,7 +26,8 @@ class _TestQuestionPageState extends State<TestQuestionPage> {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   bool _isRecording = false;
   String? _filePath;
-  String? _serverResponse;
+  String? _recordedFilePath;
+  Map<String, dynamic>? _responseData;
 
   @override
   void initState() {
@@ -51,35 +52,20 @@ class _TestQuestionPageState extends State<TestQuestionPage> {
       bitRate: 128000,
       sampleRate: 16000,
     );
-
     setState(() => _isRecording = true);
   }
 
   Future<void> _stopAndSend(String word) async {
+    await Future.delayed(const Duration(seconds: 1));
     await _recorder.stopRecorder();
     setState(() => _isRecording = false);
 
     final file = File(_filePath!);
-
-    // 🔄 Attente de la création du fichier (max 1 sec)
-    int tries = 0;
-    while (!await file.exists() && tries < 10) {
-      await Future.delayed(const Duration(milliseconds: 100));
-      tries++;
-    }
-
-    if (!await file.exists()) {
-      print("❌ Le fichier audio n’a pas été trouvé.");
-      return;
-    }
+    if (!await file.exists()) return;
 
     final bytes = await file.readAsBytes();
-    if (bytes.isEmpty) {
-      print("❌ Fichier audio vide !");
-      return;
-    }
+    if (bytes.length < 1000) return;
 
-    // 🧪 Lecture locale pour debug
     final player = AudioPlayer();
     await player.play(DeviceFileSource(_filePath!));
 
@@ -88,9 +74,7 @@ class _TestQuestionPageState extends State<TestQuestionPage> {
         'POST',
         Uri.parse('$baseUrl/api/check-pronunciation'),
       );
-
       request.fields['word'] = word;
-
       request.files.add(
         await http.MultipartFile.fromPath(
           'audio',
@@ -103,37 +87,98 @@ class _TestQuestionPageState extends State<TestQuestionPage> {
       final responseString = await streamedResponse.stream.bytesToString();
 
       if (streamedResponse.statusCode == 200) {
-        print("✅ Envoi réussi !");
-        print("📄 Réponse : $responseString");
         setState(() {
-          _serverResponse = _formatResponse(responseString);
+          _responseData = _formatResponse(responseString);
+          _recordedFilePath = _filePath;
         });
       } else {
-        print("❌ Erreur ${streamedResponse.statusCode}");
-        print("📄 Détail : $responseString");
         setState(() {
-          _serverResponse = "Erreur: ${streamedResponse.statusCode}";
+          _responseData = null;
         });
       }
     } catch (e) {
-      print("🚨 Exception HTTP : $e");
       setState(() {
-        _serverResponse = "Exception: $e";
+        _responseData = null;
       });
     }
   }
 
-  String _formatResponse(String response) {
+  Map<String, dynamic> _formatResponse(String response) {
     try {
       final json = jsonDecode(response);
-      final recognized = json['recognized'] ?? json['audio_phonetic'] ?? "";
-      final target = json['target_phonetic'] ?? "";
-      final score = (json['similarity'] ?? 0.0) * 100;
+      final incorrect = List<int>.from(json['incorrect_indices'] ?? []);
+      final totalPhonemes =
+          (json['target_phonetic'] ?? '').replaceAll(' ', '').length;
+      final correctCount = totalPhonemes - incorrect.length;
+      final correctPercent =
+          totalPhonemes > 0 ? (correctCount / totalPhonemes * 100).round() : 0;
 
-      return "🔊 Cible : $target\n🎙️ Reçu : $recognized\n🎯 Similarité : ${score.toStringAsFixed(1)}%";
+      return {
+        'text': json['target_text'] ?? '',
+        'phonetic': json['target_phonetic'] ?? '',
+        'incorrect': incorrect,
+        'correct_percent': correctPercent,
+        'raw': response,
+      };
     } catch (e) {
-      return response;
+      return {
+        'text': '',
+        'phonetic': '',
+        'incorrect': [],
+        'correct_percent': 0,
+        'raw': response,
+      };
     }
+  }
+
+  List<int> getIncorrectLetterIndices(
+    String text,
+    String phonetic,
+    List<int> incorrectPhonemeIndices,
+  ) {
+    final phonemes = phonetic.replaceAll(' ', '').split('');
+    final textRunes = text.runes.toList();
+    List<int> incorrectLetterIndices = [];
+
+    int minLength =
+        textRunes.length < phonemes.length ? textRunes.length : phonemes.length;
+
+    for (int i = 0; i < minLength; i++) {
+      if (incorrectPhonemeIndices.contains(i)) {
+        incorrectLetterIndices.add(i);
+      }
+    }
+    return incorrectLetterIndices;
+  }
+
+  RichText buildColoredText(
+    String text,
+    String phonetic,
+    List<int> incorrectPhonemeIndices,
+  ) {
+    final textRunes = text.runes.toList();
+    final incorrectLetterIndices = getIncorrectLetterIndices(
+      text,
+      phonetic,
+      incorrectPhonemeIndices,
+    );
+
+    List<InlineSpan> spans = [];
+    for (int i = 0; i < textRunes.length; i++) {
+      final isIncorrect = incorrectLetterIndices.contains(i);
+      spans.add(
+        TextSpan(
+          text: String.fromCharCode(textRunes[i]),
+          style: TextStyle(
+            color: isIncorrect ? Colors.red : Colors.black,
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+    }
+
+    return RichText(text: TextSpan(children: spans));
   }
 
   @override
@@ -197,11 +242,7 @@ class _TestQuestionPageState extends State<TestQuestionPage> {
                         ...word.images!.map(
                           (img) => Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: Image.network(
-                              baseUrl + img,
-                              errorBuilder:
-                                  (_, __, ___) => const SizedBox.shrink(),
-                            ),
+                            child: Image.network(baseUrl + img),
                           ),
                         ),
                       const SizedBox(height: 20),
@@ -226,24 +267,45 @@ class _TestQuestionPageState extends State<TestQuestionPage> {
                         ),
                       ),
                       const SizedBox(height: 30),
-                      if (_serverResponse != null)
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            _serverResponse!,
-                            style: const TextStyle(fontSize: 16),
-                          ),
+                      if (_responseData != null)
+                        Column(
+                          children: [
+                            Text(
+                              "✅ ${_responseData!['correct_percent']}% de phonèmes corrects",
+                              style: const TextStyle(
+                                fontSize: 18,
+                                color: Colors.green,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            buildColoredText(
+                              _responseData!['text'],
+                              _responseData!['phonetic'],
+                              _responseData!['incorrect'],
+                            ),
+                            const SizedBox(height: 20),
+                            if (_recordedFilePath != null)
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.play_arrow),
+                                label: const Text(
+                                  "Écouter votre prononciation",
+                                ),
+                                onPressed: () async {
+                                  final player = AudioPlayer();
+                                  await player.play(
+                                    DeviceFileSource(_recordedFilePath!),
+                                  );
+                                },
+                              ),
+                          ],
                         ),
                       const SizedBox(height: 30),
                       ElevatedButton(
                         onPressed: () {
                           context.read<TestBloc>().add(NextWord());
                           setState(() {
-                            _serverResponse = null;
+                            _responseData = null;
+                            _recordedFilePath = null;
                           });
                         },
                         child: Text(

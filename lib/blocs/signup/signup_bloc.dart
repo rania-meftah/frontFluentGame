@@ -16,6 +16,7 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
           phone: event.phone,
           email: event.email,
           password: event.password,
+          parentPin: event.parentPin,
         );
 
         if (result['success']) {

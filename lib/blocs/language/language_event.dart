@@ -1,8 +1,14 @@
 abstract class LanguageEvent {}
 
-class LoadLanguagesEvent extends LanguageEvent {}
+class LoadLanguagesEvent extends LanguageEvent {
+  final String childId;
+
+  LoadLanguagesEvent(this.childId);
+}
 
 class SelectLanguageEvent extends LanguageEvent {
   final String languageId;
-  SelectLanguageEvent(this.languageId);
+  final String childId;
+
+  SelectLanguageEvent(this.languageId, this.childId);
 }

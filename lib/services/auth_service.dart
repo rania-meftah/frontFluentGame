@@ -29,6 +29,7 @@ class AuthService {
     required String phone,
     required String email,
     required String password,
+    required String parentPin,
   }) async {
     final url = Uri.parse('$_baseUrl/signup');
 
@@ -40,6 +41,7 @@ class AuthService {
         'numero_telephone': phone,
         'Email': email,
         'Mot_de_passe': password,
+        'parentPin': parentPin,
       }),
     );
 
@@ -49,7 +51,7 @@ class AuthService {
     } else {
       return {
         'success': false,
-        'message': data['message'] ?? 'Échec de l\'inscription',
+        'message': data['errormessage'] ?? 'Échec de l\'inscription',
       };
     }
   }

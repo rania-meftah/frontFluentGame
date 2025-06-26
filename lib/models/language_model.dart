@@ -7,4 +7,6 @@ class LanguageModel {
   factory LanguageModel.fromJson(Map<String, dynamic> json) {
     return LanguageModel(id: json['_id'], name: json['name']);
   }
+
+  get code => null;
 }

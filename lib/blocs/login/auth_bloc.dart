@@ -14,11 +14,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       try {
         final result = await _authService.login(event.email, event.password);
         if (result['success']) {
-          await storage.write(
-            key: 'auth_token',
-            value: result['data']['token'],
-          );
-          emit(AuthSuccess(result['data']['user']['role'] ?? 'user'));
+          final token = result['data']['token'];
+          final userId = result['data']['user']['id'].toString();
+
+          await storage.write(key: 'auth_token', value: token);
+          await storage.write(key: 'parent_id', value: userId);
+
+          emit(AuthSuccess(userId: userId, token: token));
         } else {
           emit(AuthFailure(result['message']));
         }

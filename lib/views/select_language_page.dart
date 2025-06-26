@@ -7,7 +7,9 @@ import '../blocs/language/language_state.dart';
 import '../models/language_model.dart';
 
 class SelectLanguagePage extends StatefulWidget {
-  const SelectLanguagePage({super.key});
+  final String childId;
+
+  const SelectLanguagePage({super.key, required this.childId});
 
   @override
   State<SelectLanguagePage> createState() => _SelectLanguagePageState();
@@ -19,7 +21,11 @@ class _SelectLanguagePageState extends State<SelectLanguagePage> {
   @override
   void initState() {
     super.initState();
-    context.read<LanguageBloc>().add(LoadLanguagesEvent());
+    context.read<LanguageBloc>().add(
+      LoadLanguagesEvent(
+        widget.childId, // ✅ envoyer le bon childId ici
+      ),
+    );
   }
 
   @override
@@ -107,16 +113,28 @@ class _SelectLanguagePageState extends State<SelectLanguagePage> {
                         selectedLanguageId == null
                             ? null
                             : () {
+                              // ✅ Envoie de l’événement vers le bloc
                               context.read<LanguageBloc>().add(
-                                SelectLanguageEvent(selectedLanguageId!),
-                              );
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const TestPage(),
+                                SelectLanguageEvent(
+                                  selectedLanguageId!,
+                                  widget.childId,
                                 ),
                               );
+
+                              // ✅ Attendre un petit délai si besoin (optionnel)
+                              Future.delayed(
+                                const Duration(milliseconds: 300),
+                                () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const TestPage(),
+                                    ),
+                                  );
+                                },
+                              );
                             },
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 245, 186, 76),
                       shape: RoundedRectangleBorder(

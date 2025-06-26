@@ -10,9 +10,7 @@ class LanguageService {
   Future<List<LanguageModel>> fetchLanguages() async {
     try {
       final token = await storage.read(key: 'auth_token');
-      if (token == null) {
-        throw Exception("Token manquant !");
-      }
+      if (token == null) throw Exception("Token manquant !");
 
       final response = await http.get(
         Uri.parse('$baseUrl/all'),
@@ -36,12 +34,10 @@ class LanguageService {
     }
   }
 
-  Future<void> selectLanguage(String languageId) async {
+  Future<void> selectLanguage(String languageId, String childId) async {
     try {
       final token = await storage.read(key: 'auth_token');
-      if (token == null) {
-        throw Exception("Token manquant !");
-      }
+      if (token == null) throw Exception("Token manquant !");
 
       final response = await http.post(
         Uri.parse('$baseUrl/select'),
@@ -49,7 +45,7 @@ class LanguageService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: json.encode({'languageId': languageId}),
+        body: json.encode({'languageId': languageId, 'childId': childId}),
       );
 
       print("✅ SelectLanguage Status: ${response.statusCode}");
@@ -59,6 +55,17 @@ class LanguageService {
         throw Exception(
           'Erreur lors de la sélection de la langue : ${response.body}',
         );
+      }
+
+      // ✅ EXTRACTION ET STOCKAGE DU NOUVEAU TOKEN ENFANT
+      final data = json.decode(response.body);
+      final childToken = data['token']; // <- récupéré depuis backend
+
+      if (childToken != null) {
+        await storage.write(key: 'child_token', value: childToken);
+        print("✅ Token enfant stocké avec succès !");
+      } else {
+        print("⚠️ Avertissement : Pas de token enfant retourné !");
       }
     } catch (e) {
       print('❌ Erreur lors de la sélection de la langue: $e');

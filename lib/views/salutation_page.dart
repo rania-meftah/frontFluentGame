@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'avatar_selection_page.dart';
 
 class UserHomePage extends StatefulWidget {
-  const UserHomePage({Key? key}) : super(key: key);
+  final String childId;
+  final String parentId;
+  const UserHomePage({Key? key, required this.childId, required this.parentId})
+    : super(key: key);
 
   @override
   State<UserHomePage> createState() => _UserHomePageState();
@@ -17,7 +20,13 @@ class _UserHomePageState extends State<UserHomePage> {
     Timer(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const AvatarSelectionPage()),
+        MaterialPageRoute(
+          builder:
+              (_) => AvatarSelectionPage(
+                childId: widget.childId,
+                parentId: widget.parentId,
+              ),
+        ),
       );
     });
   }

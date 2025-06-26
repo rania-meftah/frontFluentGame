@@ -1,14 +1,23 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import 'package:my_flutter_app/blocs/language/language_bloc.dart';
 import 'package:my_flutter_app/services/language_service.dart';
 import 'package:my_flutter_app/views/select_language_page.dart';
 
 class AvatarSelectionPage extends StatefulWidget {
-  const AvatarSelectionPage({Key? key}) : super(key: key);
+  final String childId;
+  final String parentId;
+
+  const AvatarSelectionPage({
+    super.key,
+    required this.childId,
+    required this.parentId,
+  });
 
   @override
   State<AvatarSelectionPage> createState() => _AvatarSelectionPageState();
@@ -78,8 +87,6 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
                         ),
                       ),
                       const SizedBox(height: 20),
-
-                      /// Partie scrollable avec Grid
                       Expanded(
                         child: GridView.builder(
                           itemCount: avatarPaths.length,
@@ -120,10 +127,7 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
                           },
                         ),
                       ),
-
                       const SizedBox(height: 20),
-
-                      /// Bouton en bas
                       SizedBox(
                         width: double.infinity,
                         height: 50,
@@ -146,7 +150,9 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
                                             (_) => LanguageBloc(
                                               service: LanguageService(),
                                             ),
-                                        child: const SelectLanguagePage(),
+                                        child: SelectLanguagePage(
+                                          childId: widget.childId,
+                                        ), // ✅
                                       ),
                                 ),
                               );
