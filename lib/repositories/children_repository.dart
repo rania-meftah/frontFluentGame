@@ -2,10 +2,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../models/child_model.dart';
+import '../constants.dart';
 
 class ChildrenRepository {
-  final String baseUrl = 'http://192.168.1.12:5000';
-
   // 🔍 Récupérer la liste des enfants
   Future<List<ChildModel>> fetchChildren(String parentId, String token) async {
     final response = await http.get(

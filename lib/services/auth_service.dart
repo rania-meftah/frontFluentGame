@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../constants.dart';
 
 class AuthService {
-  final String _baseUrl = 'http://192.168.1.12:5000/auth';
-
   Future<Map<String, dynamic>> login(String email, String password) async {
-    final url = Uri.parse('$_baseUrl/signin');
+    final url = Uri.parse('$baseUrl/auth/signin');
 
     final response = await http.post(
       url,
@@ -31,7 +30,7 @@ class AuthService {
     required String password,
     required String parentPin,
   }) async {
-    final url = Uri.parse('$_baseUrl/signup');
+    final url = Uri.parse('$baseUrl/auth/signup');
 
     final response = await http.post(
       url,
@@ -57,7 +56,7 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>> forgotPassword(String email) async {
-    final url = Uri.parse('$_baseUrl/forgot-password');
+    final url = Uri.parse('$baseUrl/auth/forgot-password');
 
     final response = await http.post(
       url,
@@ -81,7 +80,7 @@ class AuthService {
 
   /// ✅ L’ordre correct : email puis code
   Future<Map<String, dynamic>> verifyCode(String email, String code) async {
-    final url = Uri.parse('$_baseUrl/verify-reset-code');
+    final url = Uri.parse('$baseUrl/auth/verify-reset-code');
     print('Vérification code avec email: $email et code: $code');
 
     final response = await http.post(
@@ -102,7 +101,7 @@ class AuthService {
   }
 
   Future<void> resendCode(String email) async {
-    final url = Uri.parse('$_baseUrl/forgot-password');
+    final url = Uri.parse('$baseUrl/auth/forgot-password');
 
     final response = await http.post(
       url,
@@ -121,12 +120,12 @@ class AuthService {
     String code,
     String newPassword,
   ) async {
-    final url = Uri.parse('$_baseUrl/reset-password');
+    final url = Uri.parse('$baseUrl/auth/reset-password');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'Email': email, // majuscule 'E' ici
+        'Email': email,
         'code': code,
         'newPassword': newPassword,
         'confirmPassword': newPassword, // ajoute confirmPassword

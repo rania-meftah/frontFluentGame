@@ -1,17 +1,16 @@
+// main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:my_flutter_app/views/AdminWebViewPage.dart';
+import 'package:my_flutter_app/views/salutation_page.dart';
 import 'views/AddChildPage.dart';
 import 'views/ChooseProfilePage.dart';
-
 import 'views/splash_page.dart';
 import 'views/login_page.dart';
 import 'views/signup_page.dart';
 import 'views/forget_password_page.dart';
 import 'views/verification_page.dart';
 import 'views/NewPasswordPage.dart';
-import 'views/admin_page.dart';
-import 'views/salutation_page.dart';
 import 'views/select_language_page.dart';
 
 import 'blocs/login/auth_bloc.dart';
@@ -69,12 +68,12 @@ class MyApp extends StatelessWidget {
         routes: {
           '/login': (context) => LoginPage(),
           '/signup': (context) => SignupPage(),
-          '/admin': (context) => const AdminPage(),
-          '/home': (context) => const UserHomePage(childId: '', parentId: ''),
+          '/admin': (context) => const AdminWebViewPage(),
           '/forget': (context) => ForgetPasswordPage(),
           '/verification': (context) => VerificationPage(),
           '/select-language':
               (context) => const SelectLanguagePage(childId: ''),
+          '/choose-profile': (context) => const ChooseProfilePage(),
         },
         onGenerateRoute: (settings) {
           if (settings.name == '/new_password') {
@@ -84,8 +83,6 @@ class MyApp extends StatelessWidget {
                   (context) =>
                       NewPasswordPage(email: args['email'], code: args['code']),
             );
-          } else if (settings.name == '/choose-profile') {
-            return MaterialPageRoute(builder: (context) => ChooseProfilePage());
           } else if (settings.name == '/add-child') {
             final args = settings.arguments as Map<String, dynamic>;
             return MaterialPageRoute(
@@ -102,6 +99,8 @@ class MyApp extends StatelessWidget {
                   (context) => UserHomePage(
                     childId: args['childId'],
                     parentId: args['parentId'],
+                    childName: args['childName'] ?? '',
+                    isFirstLogin: args['isFirstLogin'] ?? false,
                   ),
             );
           }

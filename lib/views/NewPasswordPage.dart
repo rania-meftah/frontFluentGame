@@ -9,8 +9,7 @@ class NewPasswordPage extends StatefulWidget {
   final String email;
   final String code;
 
-  const NewPasswordPage({Key? key, required this.email, required this.code})
-    : super(key: key);
+  const NewPasswordPage({super.key, required this.email, required this.code});
 
   @override
   State<NewPasswordPage> createState() => _NewPasswordPageState();

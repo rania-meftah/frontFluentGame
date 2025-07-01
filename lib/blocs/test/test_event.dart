@@ -10,3 +10,10 @@ class SubmitWordAudio extends TestEvent {
 }
 
 class NextWord extends TestEvent {}
+
+class FinishTest extends TestEvent {
+  final List<Map<String, dynamic>> wordResults;
+  final String langue;
+
+  FinishTest(this.wordResults, this.langue);
+}

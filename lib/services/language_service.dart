@@ -2,10 +2,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/language_model.dart';
+import '../constants.dart';
 
 class LanguageService {
   final FlutterSecureStorage storage = const FlutterSecureStorage();
-  final String baseUrl = 'http://192.168.1.12:5000/api/language';
 
   Future<List<LanguageModel>> fetchLanguages() async {
     try {
@@ -13,7 +13,7 @@ class LanguageService {
       if (token == null) throw Exception("Token manquant !");
 
       final response = await http.get(
-        Uri.parse('$baseUrl/all'),
+        Uri.parse('$baseUrl/api/language/all'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -40,7 +40,7 @@ class LanguageService {
       if (token == null) throw Exception("Token manquant !");
 
       final response = await http.post(
-        Uri.parse('$baseUrl/select'),
+        Uri.parse('$baseUrl/api/language/select'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

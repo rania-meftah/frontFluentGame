@@ -24,3 +24,10 @@ class TestError extends TestState {
 
   TestError(this.message);
 }
+
+class TestResultState extends TestState {
+  final int score;
+  final String feedback;
+
+  TestResultState(this.score, this.feedback);
+}

@@ -6,7 +6,7 @@ import '../blocs/verification/verification_state.dart';
 import './NewPasswordPage.dart';
 
 class VerificationPage extends StatefulWidget {
-  const VerificationPage({Key? key}) : super(key: key);
+  const VerificationPage({super.key});
 
   @override
   State<VerificationPage> createState() => _VerificationPageState();
@@ -72,7 +72,9 @@ class _VerificationPageState extends State<VerificationPage> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => NewPasswordPage(email: email , code:state.code),
+                  builder:
+                      (context) =>
+                          NewPasswordPage(email: email, code: state.code),
                 ),
               );
             } else if (state is VerificationFailure) {

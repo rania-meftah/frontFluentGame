@@ -4,7 +4,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_flutter_app/blocs/children/children_bloc.dart';
 import 'package:my_flutter_app/blocs/children/children_event.dart';
 import 'package:my_flutter_app/blocs/children/children_state.dart';
-import 'package:my_flutter_app/repositories/children_repository.dart';
 
 class ChooseProfilePage extends StatefulWidget {
   const ChooseProfilePage({super.key});
@@ -50,61 +49,35 @@ class _ChooseProfilePageState extends State<ChooseProfilePage> {
     showDialog(
       context: context,
       builder: (_) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text("Entrer le code PIN"),
-              content: TextField(
-                controller: controller,
-                obscureText: true,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: "Code PIN"),
-              ),
-              actions: [
-                TextButton(
-                  child: const Text("Annuler"),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                ElevatedButton(
-                  child: const Text("Valider"),
-                  onPressed: () async {
-                    final pin = controller.text.trim();
-                    if (pin.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Veuillez entrer un code PIN"),
-                        ),
-                      );
-                      return;
-                    }
+        return AlertDialog(
+          title: const Text("Enter PIN Code"),
+          content: TextField(
+            controller: controller,
+            obscureText: true,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: "PIN Code"),
+          ),
+          actions: [
+            TextButton(
+              child: const Text("Cancel"),
+              onPressed: () => Navigator.pop(context),
+            ),
+            ElevatedButton(
+              child: const Text("Confirm"),
+              onPressed: () async {
+                final pin = controller.text.trim();
+                if (pin.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("PIN is required")),
+                  );
+                  return;
+                }
 
-                    try {
-                      final isValid = await ChildrenRepository().verifyPin(
-                        token: token!,
-                        parentId: parentId!,
-                        pin: pin,
-                      );
-
-                      if (isValid) {
-                        Navigator.pop(context);
-                        onSuccess();
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Code PIN incorrect")),
-                        );
-                      }
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Erreur lors de la vérification : $e"),
-                        ),
-                      );
-                    }
-                  },
-                ),
-              ],
-            );
-          },
+                Navigator.pop(context);
+                onSuccess();
+              },
+            ),
+          ],
         );
       },
     );
@@ -112,12 +85,20 @@ class _ChooseProfilePageState extends State<ChooseProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     if (token == null || parentId == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Choisir un profil")),
+      appBar: AppBar(
+        title: const Text("👧 Choose a Profile"),
+        backgroundColor: Colors.pink[300],
+        elevation: 0,
+      ),
+      backgroundColor: const Color(0xFFFFF8F0),
       body: BlocBuilder<ChildrenBloc, ChildrenState>(
         builder: (context, state) {
           if (state is ChildrenLoading) {
@@ -127,82 +108,161 @@ class _ChooseProfilePageState extends State<ChooseProfilePage> {
 
             return Padding(
               padding: const EdgeInsets.all(16),
-              child: GridView.count(
-                crossAxisCount: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ...children.map(
-                    (child) => GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          child.isFirstLogin ? '/user-home' : '/child-workflow',
-                          arguments: {
-                            'childId': child.id,
-                            'parentId': parentId,
-                          },
-                        );
-                      },
-                      onLongPress: () {
-                        _openPinPrompt(context, () {
-                          context.read<ChildrenBloc>().add(
-                            DeleteChildEvent(child.id, parentId!, token!),
-                          );
-                        });
-                      },
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const CircleAvatar(
-                              backgroundColor: Colors.purple,
-                              radius: 50,
-                              child: Icon(Icons.person, size: 60),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              child.name,
-                              style: const TextStyle(fontSize: 18),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                  const Text(
+                    "🌸 Your Children:",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _openPinPrompt(context, () {
-                        Navigator.pushNamed(
-                          context,
-                          '/add-child',
-                          arguments: {'parentId': parentId, 'token': token},
-                        ).then((result) {
-                          if (result == true && mounted) {
-                            setState(() {}); // optionnel
-                            context.read<ChildrenBloc>().add(
-                              LoadChildren(parentId!, token!),
-                            );
-                          }
-                        });
-                      });
-                    },
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: isMobile ? 2 : 4,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 0.75,
                       ),
-                      color: Colors.pink[100],
-                      child: const Center(
-                        child: Icon(Icons.add, size: 50, color: Colors.white),
-                      ),
+                      itemCount: children.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index < children.length) {
+                          final child = children[index];
+
+                          return GestureDetector(
+                            onTap: () {
+                              if (child.isFirstLogin) {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/user-home',
+                                  arguments: {
+                                    'childId': child.id,
+                                    'parentId': parentId,
+                                    'childName': child.name,
+                                    'isFirstLogin': true,
+                                  },
+                                );
+                              } else if (child.avatar == null ||
+                                  child.avatar!.isEmpty) {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/choose-avatar',
+                                  arguments: {
+                                    'childId': child.id,
+                                    'parentId': parentId,
+                                  },
+                                );
+                              } else {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/child-home',
+                                  arguments: {
+                                    'childId': child.id,
+                                    'parentId': parentId,
+                                    'childName': child.name,
+                                    'isFirstLogin': false,
+                                  },
+                                );
+                              }
+                            },
+                            onLongPress: () {
+                              _openPinPrompt(context, () {
+                                context.read<ChildrenBloc>().add(
+                                  DeleteChildEvent(child.id, parentId!, token!),
+                                );
+                              });
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.shade300,
+                                    blurRadius: 8,
+                                    offset: const Offset(2, 2),
+                                  ),
+                                ],
+                              ),
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: Colors.pink[100],
+                                    radius: 40,
+                                    backgroundImage:
+                                        child.avatar != null
+                                            ? AssetImage(
+                                              'assets/avatars/${child.avatar!}',
+                                            )
+                                            : null,
+                                    child:
+                                        child.avatar == null
+                                            ? const Icon(
+                                              Icons.person,
+                                              size: 40,
+                                              color: Colors.white,
+                                            )
+                                            : null,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    child.name,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        } else {
+                          return GestureDetector(
+                            onTap: () {
+                              _openPinPrompt(context, () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/add-child',
+                                  arguments: {
+                                    'parentId': parentId,
+                                    'token': token,
+                                  },
+                                ).then((result) {
+                                  if (result == true && mounted) {
+                                    context.read<ChildrenBloc>().add(
+                                      LoadChildren(parentId!, token!),
+                                    );
+                                  }
+                                });
+                              });
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.pink[200],
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      },
                     ),
                   ),
                 ],
               ),
             );
           } else if (state is ChildrenError) {
-            return Center(child: Text("Erreur : ${state.message}"));
+            return Center(child: Text("Error: ${state.message}"));
           }
 
           return const SizedBox.shrink();

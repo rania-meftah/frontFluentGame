@@ -4,24 +4,65 @@ import '../blocs/signup/signup_bloc.dart';
 import '../blocs/signup/signup_event.dart';
 import '../blocs/signup/signup_state.dart';
 
-class SignupPage extends StatelessWidget {
-  SignupPage({super.key});
+class SignupPage extends StatefulWidget {
+  const SignupPage({super.key});
 
+  @override
+  State<SignupPage> createState() => _SignupPageState();
+}
+
+class _SignupPageState extends State<SignupPage> {
   final _fullNameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _pinController = TextEditingController(); // ✅ nouveau champ
+  final _pinController = TextEditingController();
+
+  bool obscurePassword = true;
+  bool obscurePin = true;
+
+  // ✅ Vérifie si email a un bon format
+  bool isValidEmail(String email) {
+    final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
+    return emailRegex.hasMatch(email);
+  }
 
   void _submitSignup(BuildContext context) {
+    final fullName = _fullNameController.text.trim();
+    final phone = _phoneController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final pin = _pinController.text.trim();
+
+    // ✅ Vérifications avant envoi
+    if (fullName.isEmpty ||
+        phone.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        pin.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Invalid email format')));
+      return;
+    }
+
+    if (pin.length != 4 || int.tryParse(pin) == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('PIN must be a 4-digit number')),
+      );
+      return;
+    }
+
+    // ✅ Si tout est OK : envoi l’événement
     context.read<SignupBloc>().add(
-      SubmitSignup(
-        _fullNameController.text,
-        _phoneController.text,
-        _emailController.text,
-        _passwordController.text,
-        _pinController.text, // ✅ ajout du code PIN à l'envoi
-      ),
+      SubmitSignup(fullName, phone, email, password, pin),
     );
   }
 
@@ -41,41 +82,53 @@ class SignupPage extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    Image.asset('assets/images/love.png', height: 150),
+                    Image.asset('assets/images/familysignup.png', height: 150),
                     const SizedBox(height: 20),
                     _buildInputField(
-                      'Full Name',
-                      _fullNameController,
-                      Icons.person,
+                      label: 'Full Name',
+                      controller: _fullNameController,
+                      icon: Icons.person,
                     ),
                     const SizedBox(height: 15),
                     _buildInputField(
-                      'Phone',
-                      _phoneController,
-                      Icons.phone,
+                      label: 'Phone',
+                      controller: _phoneController,
+                      icon: Icons.phone,
                       type: TextInputType.phone,
                     ),
                     const SizedBox(height: 15),
                     _buildInputField(
-                      'Email',
-                      _emailController,
-                      Icons.email,
+                      label: 'Email',
+                      controller: _emailController,
+                      icon: Icons.email,
                       type: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 15),
                     _buildInputField(
-                      'Password',
-                      _passwordController,
-                      Icons.lock,
+                      label: 'Password',
+                      controller: _passwordController,
+                      icon: Icons.lock,
                       isPassword: true,
+                      obscureText: obscurePassword,
+                      toggleObscure: () {
+                        setState(() {
+                          obscurePassword = !obscurePassword;
+                        });
+                      },
                     ),
                     const SizedBox(height: 15),
                     _buildInputField(
-                      'Parent PIN (ex: 1234)',
-                      _pinController,
-                      Icons.pin,
+                      label: 'Parent PIN (ex: 1234)',
+                      controller: _pinController,
+                      icon: Icons.pin,
                       type: TextInputType.number,
                       isPassword: true,
+                      obscureText: obscurePin,
+                      toggleObscure: () {
+                        setState(() {
+                          obscurePin = !obscurePin;
+                        });
+                      },
                     ),
                     const SizedBox(height: 25),
                     BlocConsumer<SignupBloc, SignupState>(
@@ -154,21 +207,33 @@ class SignupPage extends StatelessWidget {
     );
   }
 
-  Widget _buildInputField(
-    String label,
-    TextEditingController controller,
-    IconData icon, {
+  // ✅ Widget pour champ avec option mot de passe/obscure
+  Widget _buildInputField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
     TextInputType type = TextInputType.text,
     bool isPassword = false,
+    bool obscureText = false,
+    VoidCallback? toggleObscure,
   }) {
     return TextField(
       controller: controller,
-      obscureText: isPassword,
       keyboardType: type,
+      obscureText: isPassword ? obscureText : false,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
         prefixIcon: Icon(icon),
+        suffixIcon:
+            isPassword
+                ? IconButton(
+                  icon: Icon(
+                    obscureText ? Icons.visibility_off : Icons.visibility,
+                  ),
+                  onPressed: toggleObscure,
+                )
+                : null,
       ),
     );
   }

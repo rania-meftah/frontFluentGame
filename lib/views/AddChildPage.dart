@@ -21,14 +21,22 @@ class _AddChildPageState extends State<AddChildPage> {
 
   void _submit() {
     final name = nameController.text.trim();
-    final age = int.tryParse(ageController.text.trim());
+    final ageText = ageController.text.trim();
+    final age = int.tryParse(ageText);
 
-    print("🧪 Soumission : name=$name, age=$age");
-
-    if (name.isEmpty || age == null) {
+    if (name.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Veuillez entrer un nom et un âge valides."),
+          content: Text("Le nom doit contenir au moins 2 caractères."),
+        ),
+      );
+      return;
+    }
+
+    if (age == null || age <= 0 || age > 14) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("L'âge doit être un nombre entre 1 et 14."),
         ),
       );
       return;
@@ -41,7 +49,6 @@ class _AddChildPageState extends State<AddChildPage> {
       isFirstLogin: true,
     );
 
-    print("📤 Envoi AddChildEvent");
     context.read<ChildrenBloc>().add(
       AddChildEvent(newChild, widget.parentId, widget.token),
     );
@@ -53,14 +60,9 @@ class _AddChildPageState extends State<AddChildPage> {
       appBar: AppBar(title: const Text("Ajouter un enfant")),
       body: BlocConsumer<ChildrenBloc, ChildrenState>(
         listener: (context, state) {
-          print("🎯 Listener: $state");
-
           if (state is ChildrenLoaded) {
-            print("✅ Enfant ajouté avec succès.");
-            // Redirection directe vers ChooseProfilePage
             Navigator.pushReplacementNamed(context, '/choose-profile');
           } else if (state is ChildrenError) {
-            print("❌ Erreur : ${state.message}");
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text(state.message)));
@@ -75,13 +77,19 @@ class _AddChildPageState extends State<AddChildPage> {
                   controller: nameController,
                   decoration: const InputDecoration(
                     labelText: "Nom de l'enfant",
+                    prefixIcon: Icon(Icons.person),
+                    border: OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: ageController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: "Âge"),
+                  decoration: const InputDecoration(
+                    labelText: "Âge",
+                    prefixIcon: Icon(Icons.cake),
+                    border: OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 if (state is ChildrenLoading)
@@ -89,6 +97,9 @@ class _AddChildPageState extends State<AddChildPage> {
                 else
                   ElevatedButton(
                     onPressed: _submit,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
                     child: const Text("Créer le compte"),
                   ),
               ],

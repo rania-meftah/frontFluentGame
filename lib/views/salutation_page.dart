@@ -1,3 +1,4 @@
+// user_home_page.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'avatar_selection_page.dart';
@@ -5,8 +6,16 @@ import 'avatar_selection_page.dart';
 class UserHomePage extends StatefulWidget {
   final String childId;
   final String parentId;
-  const UserHomePage({Key? key, required this.childId, required this.parentId})
-    : super(key: key);
+  final String childName;
+  final bool isFirstLogin;
+
+  const UserHomePage({
+    super.key,
+    required this.childId,
+    required this.parentId,
+    required this.childName,
+    required this.isFirstLogin,
+  });
 
   @override
   State<UserHomePage> createState() => _UserHomePageState();
@@ -16,7 +25,6 @@ class _UserHomePageState extends State<UserHomePage> {
   @override
   void initState() {
     super.initState();
-    // Redirection automatique après 3 secondes
     Timer(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
@@ -34,12 +42,27 @@ class _UserHomePageState extends State<UserHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF9F7FD),
       body: Center(
-        child: Image.asset(
-          'assets/images/hello.png',
-          width: 300, // Image plus grande
-          height: 300,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Hello ${widget.childName} 👋',
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF6A1B9A),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Image.asset('assets/images/hello.png', width: 260, height: 260),
+            const SizedBox(height: 12),
+            const Text(
+              'We’re happy to see you today!',
+              style: TextStyle(fontSize: 16, color: Colors.black54),
+            ),
+          ],
         ),
       ),
     );

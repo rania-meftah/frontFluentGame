@@ -4,7 +4,6 @@ import 'package:my_flutter_app/views/test_page.dart';
 import '../blocs/language/language_bloc.dart';
 import '../blocs/language/language_event.dart';
 import '../blocs/language/language_state.dart';
-import '../models/language_model.dart';
 
 class SelectLanguagePage extends StatefulWidget {
   final String childId;
@@ -21,11 +20,7 @@ class _SelectLanguagePageState extends State<SelectLanguagePage> {
   @override
   void initState() {
     super.initState();
-    context.read<LanguageBloc>().add(
-      LoadLanguagesEvent(
-        widget.childId, // ✅ envoyer le bon childId ici
-      ),
-    );
+    context.read<LanguageBloc>().add(LoadLanguagesEvent(widget.childId));
   }
 
   @override
@@ -40,7 +35,7 @@ class _SelectLanguagePageState extends State<SelectLanguagePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // ✅ Image en haut
+                // Image
                 Image.asset(
                   'assets/images/cible.png',
                   height: 150,
@@ -48,7 +43,7 @@ class _SelectLanguagePageState extends State<SelectLanguagePage> {
                 ),
                 const SizedBox(height: 30),
 
-                // ✅ Titre
+                // Titre
                 const Text(
                   "What would you like to learn..?",
                   textAlign: TextAlign.center,
@@ -60,37 +55,70 @@ class _SelectLanguagePageState extends State<SelectLanguagePage> {
                 ),
                 const SizedBox(height: 30),
 
-                // ✅ Liste déroulante (DropdownButton)
+                // Sélection de langue (modale personnalisée)
                 BlocBuilder<LanguageBloc, LanguageState>(
                   builder: (context, state) {
                     if (state is LanguageLoading) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const CircularProgressIndicator();
                     } else if (state is LanguageLoaded) {
-                      return DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
+                      return GestureDetector(
+                        onTap: () async {
+                          final selected = await showModalBottomSheet<String>(
+                            context: context,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(20),
+                              ),
+                            ),
+                            builder: (context) {
+                              return ListView(
+                                shrinkWrap: true,
+                                children:
+                                    state.languages.map((lang) {
+                                      return ListTile(
+                                        title: Text(lang.name),
+                                        onTap:
+                                            () =>
+                                                Navigator.pop(context, lang.id),
+                                      );
+                                    }).toList(),
+                              );
+                            },
+                          );
+
+                          if (selected != null) {
+                            setState(() => selectedLanguageId = selected);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 18,
+                          ),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: Colors.grey),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 16,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                selectedLanguageId == null
+                                    ? "Select a language"
+                                    : state.languages
+                                        .firstWhere(
+                                          (lang) =>
+                                              lang.id == selectedLanguageId,
+                                        )
+                                        .name,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              const Icon(Icons.arrow_drop_down),
+                            ],
                           ),
-                          filled: true,
-                          fillColor: Colors.white,
                         ),
-                        value: selectedLanguageId,
-                        hint: const Text("Select a language"),
-                        items:
-                            state.languages.map((LanguageModel lang) {
-                              return DropdownMenuItem(
-                                value: lang.id,
-                                child: Text(lang.name),
-                              );
-                            }).toList(),
-                        onChanged: (value) {
-                          setState(() => selectedLanguageId = value);
-                        },
                       );
                     } else if (state is LanguageError) {
                       return Text(
@@ -98,13 +126,13 @@ class _SelectLanguagePageState extends State<SelectLanguagePage> {
                         style: const TextStyle(color: Colors.red),
                       );
                     }
-                    return Container();
+                    return const SizedBox.shrink();
                   },
                 ),
 
                 const SizedBox(height: 30),
 
-                // ✅ Bouton Continuer
+                // Bouton Continuer
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -113,7 +141,6 @@ class _SelectLanguagePageState extends State<SelectLanguagePage> {
                         selectedLanguageId == null
                             ? null
                             : () {
-                              // ✅ Envoie de l’événement vers le bloc
                               context.read<LanguageBloc>().add(
                                 SelectLanguageEvent(
                                   selectedLanguageId!,
@@ -121,7 +148,6 @@ class _SelectLanguagePageState extends State<SelectLanguagePage> {
                                 ),
                               );
 
-                              // ✅ Attendre un petit délai si besoin (optionnel)
                               Future.delayed(
                                 const Duration(milliseconds: 300),
                                 () {
@@ -134,7 +160,6 @@ class _SelectLanguagePageState extends State<SelectLanguagePage> {
                                 },
                               );
                             },
-
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 245, 186, 76),
                       shape: RoundedRectangleBorder(
