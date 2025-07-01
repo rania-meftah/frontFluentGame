@@ -26,24 +26,20 @@ class _AddChildPageState extends State<AddChildPage> {
 
     if (name.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Le nom doit contenir au moins 2 caractères."),
-        ),
+        const SnackBar(content: Text("Name must be at least 2 characters.")),
       );
       return;
     }
 
     if (age == null || age <= 0 || age > 14) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("L'âge doit être un nombre entre 1 et 14."),
-        ),
+        const SnackBar(content: Text("Age must be a number between 1 and 14.")),
       );
       return;
     }
 
     final newChild = ChildModel(
-      id: '', // sera défini côté backend
+      id: '',
       name: name,
       age: age,
       isFirstLogin: true,
@@ -57,7 +53,7 @@ class _AddChildPageState extends State<AddChildPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Ajouter un enfant")),
+      appBar: AppBar(title: const Text("Add a Child")),
       body: BlocConsumer<ChildrenBloc, ChildrenState>(
         listener: (context, state) {
           if (state is ChildrenLoaded) {
@@ -69,14 +65,26 @@ class _AddChildPageState extends State<AddChildPage> {
           }
         },
         builder: (context, state) {
-          return Padding(
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // 👇 Image ajoutée en haut
+                Image.asset(
+                  'assets/images/add-user.png', // Assure-toi que le chemin correspond
+                  height: 160,
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  "Add your child’s profile 👶",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 32),
                 TextField(
                   controller: nameController,
                   decoration: const InputDecoration(
-                    labelText: "Nom de l'enfant",
+                    labelText: "Child's Name",
                     prefixIcon: Icon(Icons.person),
                     border: OutlineInputBorder(),
                   ),
@@ -86,7 +94,7 @@ class _AddChildPageState extends State<AddChildPage> {
                   controller: ageController,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
-                    labelText: "Âge",
+                    labelText: "Age",
                     prefixIcon: Icon(Icons.cake),
                     border: OutlineInputBorder(),
                   ),
@@ -100,7 +108,7 @@ class _AddChildPageState extends State<AddChildPage> {
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 50),
                     ),
-                    child: const Text("Créer le compte"),
+                    child: const Text("Create Account"),
                   ),
               ],
             ),

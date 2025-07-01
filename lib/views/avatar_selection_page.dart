@@ -28,27 +28,27 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
   int? selectedAvatarIndex;
   final FlutterSecureStorage storage = const FlutterSecureStorage();
 
-  final List<String> avatarPaths = [
-    'assets/avatars/avatar1.png',
-    'assets/avatars/avatar2.png',
-    'assets/avatars/avatar3.png',
-    'assets/avatars/avatar4.png',
-    'assets/avatars/avatar5.png',
-    'assets/avatars/avatar6.png',
-    'assets/avatars/avatar7.png',
-    'assets/avatars/avatar8.png',
-    'assets/avatars/avatar9.png',
+  /// ✅ Liste des noms de fichiers sans chemin complet
+  final List<String> avatarNames = [
+    'avatar1.png',
+    'avatar2.png',
+    'avatar3.png',
+    'avatar4.png',
+    'avatar5.png',
+    'avatar6.png',
+    'avatar7.png',
+    'avatar8.png',
+    'avatar9.png',
   ];
 
-  /// ✅ Met à jour l'avatar + isFirstLogin côté backend
-  Future<void> updateAvatar(String fullAvatarPath) async {
+  /// ✅ Envoie avatarName au backend
+  Future<void> updateAvatar(String avatarName) async {
     final token = await storage.read(key: 'auth_token');
     if (token == null) {
       print('❌ Token manquant !');
       return;
     }
 
-    final avatarName = fullAvatarPath.split('/').last; // ✅ avatar3.png
     final url = Uri.parse(
       '$baseUrl/api/parent/${widget.parentId}/child/${widget.childId}/settings',
     );
@@ -60,8 +60,8 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
         'Authorization': 'Bearer $token',
       },
       body: jsonEncode({
-        'avatar': avatarName,
-        'isFirstLogin': false, // ✅ on marque le premier login comme terminé
+        'avatar': avatarName, // ✅ avatar9.png uniquement
+        'isFirstLogin': false,
       }),
     );
 
@@ -91,7 +91,7 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
                   const SizedBox(height: 30),
                   Expanded(
                     child: GridView.builder(
-                      itemCount: avatarPaths.length,
+                      itemCount: avatarNames.length,
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 3,
@@ -120,7 +120,7 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: Image.asset(
-                                avatarPaths[index],
+                                'assets/avatars/${avatarNames[index]}', // ✅ Affichage
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -140,7 +140,7 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
                       onPressed: () async {
                         if (selectedAvatarIndex != null) {
                           final selectedAvatar =
-                              avatarPaths[selectedAvatarIndex!];
+                              avatarNames[selectedAvatarIndex!];
                           await updateAvatar(selectedAvatar);
 
                           Navigator.pushReplacement(

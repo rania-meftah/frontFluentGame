@@ -15,6 +15,10 @@ class TestLoaded extends TestState {
   WordModel get currentWord => words[currentIndex];
 
   bool get isLast => currentIndex == words.length - 1;
+
+  get score => null;
+
+  get feedback => null;
 }
 
 class TestFinished extends TestState {}

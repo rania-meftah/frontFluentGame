@@ -14,7 +14,7 @@ class UserHomePage extends StatefulWidget {
     required this.childId,
     required this.parentId,
     required this.childName,
-    required this.isFirstLogin,
+    required this.isFirstLogin, required level,
   });
 
   @override

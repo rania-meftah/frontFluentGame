@@ -13,6 +13,11 @@ class ForgetPasswordPage extends StatelessWidget {
     Navigator.pushReplacementNamed(context, '/verification', arguments: email);
   }
 
+  bool isValidEmail(String email) {
+    final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
+    return emailRegex.hasMatch(email);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,9 +32,9 @@ class ForgetPasswordPage extends StatelessWidget {
                 );
                 _navigateToVerification(context, emailController.text.trim());
               } else if (state is ForgetPasswordFailure) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(state.message)));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(state.message)),
+                );
               }
             },
             builder: (context, state) {
@@ -87,39 +92,36 @@ class ForgetPasswordPage extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         height: 50,
-                        child:
-                            state is ForgetPasswordLoading
-                                ? const Center(
-                                  child: CircularProgressIndicator(),
-                                )
-                                : ElevatedButton(
-                                  onPressed: () {
-                                    final email = emailController.text.trim();
-                                    if (email.isNotEmpty) {
-                                      context.read<ForgetPasswordBloc>().add(
-                                        SendResetLinkEvent(email),
-                                      );
-                                    } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Email is required'),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFF09935),
-                                  ),
-                                  child: const Text(
-                                    'Send Reset Link',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
+                        child: state is ForgetPasswordLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : ElevatedButton(
+                                onPressed: () {
+                                  final email = emailController.text.trim();
+                                  if (email.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Email is required')),
+                                    );
+                                  } else if (!isValidEmail(email)) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Enter a valid email address')),
+                                    );
+                                  } else {
+                                    context.read<ForgetPasswordBloc>().add(
+                                          SendResetLinkEvent(email),
+                                        );
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFF09935),
+                                ),
+                                child: const Text(
+                                  'Send Reset Link',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
                                   ),
                                 ),
+                              ),
                       ),
                       const SizedBox(height: 40),
                     ],

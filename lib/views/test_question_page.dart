@@ -224,8 +224,8 @@ class _TestQuestionPageState extends State<TestQuestionPage> {
                                         ),
                                         child: Image.asset(
                                           'assets/images/volume.png',
-                                          width: isSmall ? 40 : 60,
-                                          height: isSmall ? 40 : 60,
+                                          width: isSmall ? 60 : 80,
+                                          height: isSmall ? 60 : 80,
                                         ),
                                       ),
                                     ),
@@ -270,7 +270,7 @@ class _TestQuestionPageState extends State<TestQuestionPage> {
                                             ),
                                             child: Image.network(
                                               Uri.encodeFull(baseUrl + img),
-                                              height: isSmall ? 180 : 250,
+                                              height: isSmall ? 250 : 350,
                                               fit: BoxFit.contain,
                                             ),
                                           ),
@@ -287,8 +287,8 @@ class _TestQuestionPageState extends State<TestQuestionPage> {
                               children: [
                                 Image.asset(
                                   'assets/images/mic.png',
-                                  width: isSmall ? 60 : 80,
-                                  height: isSmall ? 60 : 80,
+                                  width: isSmall ? 80 : 100,
+                                  height: isSmall ? 80 : 100,
                                 ),
                                 const SizedBox(height: 8),
                                 Text(

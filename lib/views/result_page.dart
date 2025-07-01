@@ -78,6 +78,7 @@ class ResultPage extends StatelessWidget {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (_) => const HomeChildPage()),
+            
                   );
                 },
                 child: const Text(

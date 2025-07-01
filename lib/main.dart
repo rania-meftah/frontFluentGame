@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_flutter_app/views/AdminWebViewPage.dart';
+import 'package:my_flutter_app/views/HomeChildPage.dart';
 import 'package:my_flutter_app/views/salutation_page.dart';
 import 'views/AddChildPage.dart';
 import 'views/ChooseProfilePage.dart';
@@ -69,10 +70,12 @@ class MyApp extends StatelessWidget {
           '/login': (context) => LoginPage(),
           '/signup': (context) => SignupPage(),
           '/admin': (context) => const AdminWebViewPage(),
-          '/forget': (context) => ForgetPasswordPage(),
+          '/forget-password': (context) => ForgetPasswordPage(),
           '/verification': (context) => VerificationPage(),
           '/select-language':
               (context) => const SelectLanguagePage(childId: ''),
+          '/child-home': (context) => const HomeChildPage(), 
+
           '/choose-profile': (context) => const ChooseProfilePage(),
         },
         onGenerateRoute: (settings) {
@@ -101,6 +104,8 @@ class MyApp extends StatelessWidget {
                     parentId: args['parentId'],
                     childName: args['childName'] ?? '',
                     isFirstLogin: args['isFirstLogin'] ?? false,
+                            level: args['level'], // ✅ Passe le niveau ici aussi
+
                   ),
             );
           }
